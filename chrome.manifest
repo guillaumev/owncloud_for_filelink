@@ -1,0 +1,5 @@
+content     owncloud    chrome/content/
+locale owncloud fr chrome/locale/fr/
+component {ad8c3b77-7dc8-41d1-8985-5be88b254ff3} components/nsOwncloud.js
+contract @mozilla.org/mail/owncloud;1 {ad8c3b77-7dc8-41d1-8985-5be88b254ff3}
+category cloud-files Owncloud @mozilla.org/mail/owncloud;1
