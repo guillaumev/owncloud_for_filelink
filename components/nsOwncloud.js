@@ -437,19 +437,25 @@ nsOwncloud.prototype = {
 
     req.onload = function() {
       if (req.status >= 200 && req.status < 400) {
-        this.log.info("auth token response = " + req.responseText);
-        let docResponse = JSON.parse(req.responseText);
-        this.log.info("login response parsed = " + docResponse);
-        let statuscode = docResponse.ocs.meta.statuscode;
-        this.log.info("statuscode = " + statuscode);
-        if (statuscode == 100) {
-          this._loggedIn = true;
-          successCallback();
-        }
-        else {
+        try {
+          this.log.info("auth token response = " + req.responseText);
+          let docResponse = JSON.parse(req.responseText);
+          //this.log.info("login response parsed = " + docResponse);
+          let statuscode = docResponse.ocs.meta.statuscode;
+          this.log.info("statuscode = " + statuscode);
+          if (statuscode == 100) {
+            this._loggedIn = true;
+            successCallback();
+          }
+          else {
+            this._loggedIn = false;
+            this._lastErrorText = docResponse.ocs.meta.message;
+            this._lastErrorStatus = docResponse.ocs.meta.statuscode;
+            failureCallback();
+          }
+        } catch(e) {
+          this.log.error(e);
           this._loggedIn = false;
-          this._lastErrorText = docResponse.ocs.meta.message;
-          this._lastErrorStatus = docResponse.ocs.meta.statuscode;
           failureCallback();
         }
       }
@@ -567,8 +573,15 @@ nsOwncloudFileUploader.prototype = {
     
     req.onload = function() {
       if (req.status >= 200 && req.status < 400) {
-        this.owncloud._urlsForFiles[this.file.path] = JSON.parse(req.responseText).ocs.data.url;
-        aCallback(this.requestObserver, Cr.NS_OK);
+        try {
+          var response = JSON.parse(req.responseText);
+          this.owncloud._urlsForFiles[this.file.path] = response.ocs.data.url 
+                                                        + '&download';
+          aCallback(this.requestObserver, Cr.NS_OK);
+        } catch(e) {
+            this.log.error(e);
+            aCallback(this.requestObserver, Ci.nsIMsgCloudFileProvider.uploadErr);
+        }
       } else {
         this.log.info("Could not retrive share URL");
         aCallback(this.requestObserver, Cr.NS_ERROR_FAILURE);
