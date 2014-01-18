@@ -572,6 +572,7 @@ nsOwncloudFileUploader.prototype = {
     req.setRequestHeader("Content-Length", formData.length);
     
     req.onload = function() {
+      this.log.debug("Raw response: " + req.responseText);
       if (req.status >= 200 && req.status < 400) {
         try {
           var response = JSON.parse(req.responseText);
@@ -592,7 +593,7 @@ nsOwncloudFileUploader.prototype = {
       this.log.info("Could not retrive share URL");
       aCallback(this.requestObserver, Cr.NS_ERROR_FAILURE);
     }.bind(this);
-
+    this.log.debug("Raw formData: " + formData);
     req.send(formData);
   },
 };
