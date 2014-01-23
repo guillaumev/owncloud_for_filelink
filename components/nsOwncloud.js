@@ -589,8 +589,8 @@ nsOwncloudFileUploader.prototype = {
       }
     }.bind(this);
 
-    req.onerror = function() {
-      this.log.info("Could not retrive share URL");
+    req.onerror = function(e) {
+      this.log.debug("Other error: " + e);
       aCallback(this.requestObserver, Cr.NS_ERROR_FAILURE);
     }.bind(this);
     this.log.debug("Raw formData: " + formData);
