@@ -56,6 +56,7 @@ nsOwncloud.prototype = {
 
   _accountKey: false,
   _serverUrl: "",
+  _storageFolder: "",
   _userName: "",
   _password: "",
   _prefBranch: null,
@@ -88,6 +89,7 @@ nsOwncloud.prototype = {
     this._prefBranch = Services.prefs.getBranch("mail.cloud_files.accounts." + 
                                                 aAccountKey + ".");
     this._serverUrl = this._prefBranch.getCharPref("server");
+    this._storageFolder = this._prefBranch.getCharPref("storageFolder");
     this._userName = this._prefBranch.getCharPref("username");
     this._password = this._prefBranch.getCharPref("password");
   },
@@ -491,8 +493,8 @@ nsOwncloudFileUploader.prototype = {
   uploadFile: function nsOFU_uploadFile() {
     this.requestObserver.onStartRequest(null, null);
     this._fileUploadTS[this.file.path] = new Date().getTime();
-    this.log.info("ready to upload file " + wwwFormUrlEncode(this.file.leafName));
-    let url = this.owncloud._serverUrl + kWebDavPath + "/"
+    this.log.info("ready to upload file " + wwwFormUrlEncode(this.file.leafName) + " to folder " + this.owncloud._storageFolder);
+    let url = this.owncloud._serverUrl + kWebDavPath + "/" + this.owncloud._storageFolder + "/"
         + this._fileUploadTS[this.file.path] + "_" + this.file.leafName;
     let fileContents = "";
     let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
@@ -559,7 +561,7 @@ nsOwncloudFileUploader.prototype = {
     //let url = this.owncloud._serverUrl + kWebDavPath;
     this.file = aFile;
 
-    let formData  = "shareType=3&path=" + wwwFormUrlEncode("/"
+    let formData  = "shareType=3&path=" + wwwFormUrlEncode("/" + this.owncloud._storageFolder + "/"
         + this._fileUploadTS[this.file.path] + "_" + this.file.leafName);
     let args = "?format=json";
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
