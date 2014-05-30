@@ -7,7 +7,7 @@ Owncloud for Filelink makes it easy to send large attachments by uploading those
 Owncloud is a popular storage service, and this add-on allows Filelink to make use of it.
 
 ## Installation
-1a) Download the provided .xpi release
+1a) Download the provided release .zip and extract it. (The .zip file only contains one file named owncloud_for_filelink.xpi)
 OR
 1b) Zip all files from this repository such that the install.rdf and chrome.manifest are located in the root folder of the zip file. Change the file extension from .zip to .xpi.
 2) Open your Thunderbird, navigate to Tools->Add-Ons, choose "Install Add-On From File..." and select the .xpi file. After installation restart your thunderbird.
