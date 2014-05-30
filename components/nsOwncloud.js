@@ -4,7 +4,7 @@
 
 /* This file implements the nsIMsgCloudFileProvider interface.
  *
- * This component handles the Owncloud implementation of the
+ * This component handles the ownCloud implementation of the
  * nsIMsgCloudFileProvider interface.
  */
 
@@ -340,7 +340,7 @@ nsOwncloud.prototype = {
 
 
   /**
-   * Our Owncloud implementation does not implement the createNewAccount
+   * Our ownCloud implementation does not implement the createNewAccount
    * function defined in nsIMsgCloudFileProvider.idl.
    */
   createNewAccount: function nsOwncloud_createNewAccount(aEmailAddress,
@@ -378,7 +378,7 @@ nsOwncloud.prototype = {
   get createNewAccountUrl() "",
 
   /**
-   * For a particular error, return a URL if Owncloud has a page for handling
+   * For a particular error, return a URL if ownCloud has a page for handling
    * that particular error.
    *
    * @param aError the error to get the URL for
