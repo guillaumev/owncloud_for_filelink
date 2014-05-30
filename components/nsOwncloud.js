@@ -89,9 +89,14 @@ nsOwncloud.prototype = {
     this._prefBranch = Services.prefs.getBranch("mail.cloud_files.accounts." + 
                                                 aAccountKey + ".");
     this._serverUrl = this._prefBranch.getCharPref("server");
-    this._storageFolder = this._prefBranch.getCharPref("storageFolder");
     this._userName = this._prefBranch.getCharPref("username");
     this._password = this._prefBranch.getCharPref("password");
+
+    if(this._prefBranch.prefHasUserValue("storageFolder")) {
+      this._storageFolder = this._prefBranch.getCharPref("storageFolder");
+    } else {
+      this._storageFolder = "/";
+    }
   },
 
   /**
