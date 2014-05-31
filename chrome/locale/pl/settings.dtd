@@ -4,5 +4,6 @@
 -->
 <!ENTITY owncloudSettings.learnMore "Dowiedz się więcej…">
 <!ENTITY owncloudSettings.server "URL serwera">
+<!ENTITY owncloudSettings.storageFolder "Path to storage folder in ownCloud">
 <!ENTITY owncloudSettings.username "Twoja nazwa użytkownika">
 <!ENTITY owncloudSettings.password "Twoje hasło">

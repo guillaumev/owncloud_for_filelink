@@ -4,7 +4,7 @@
 
 /* This file implements the nsIMsgCloudFileProvider interface.
  *
- * This component handles the Owncloud implementation of the
+ * This component handles the ownCloud implementation of the
  * nsIMsgCloudFileProvider interface.
  */
 
@@ -56,6 +56,7 @@ nsOwncloud.prototype = {
 
   _accountKey: false,
   _serverUrl: "",
+  _storageFolder: "",
   _userName: "",
   _password: "",
   _prefBranch: null,
@@ -90,6 +91,12 @@ nsOwncloud.prototype = {
     this._serverUrl = this._prefBranch.getCharPref("server");
     this._userName = this._prefBranch.getCharPref("username");
     this._password = this._prefBranch.getCharPref("password");
+
+    if(this._prefBranch.prefHasUserValue("storageFolder")) {
+      this._storageFolder = this._prefBranch.getCharPref("storageFolder");
+    } else {
+      this._storageFolder = "/";
+    }
   },
 
   /**
@@ -333,7 +340,7 @@ nsOwncloud.prototype = {
 
 
   /**
-   * Our Owncloud implementation does not implement the createNewAccount
+   * Our ownCloud implementation does not implement the createNewAccount
    * function defined in nsIMsgCloudFileProvider.idl.
    */
   createNewAccount: function nsOwncloud_createNewAccount(aEmailAddress,
@@ -371,7 +378,7 @@ nsOwncloud.prototype = {
   get createNewAccountUrl() "",
 
   /**
-   * For a particular error, return a URL if Owncloud has a page for handling
+   * For a particular error, return a URL if ownCloud has a page for handling
    * that particular error.
    *
    * @param aError the error to get the URL for
@@ -491,8 +498,8 @@ nsOwncloudFileUploader.prototype = {
   uploadFile: function nsOFU_uploadFile() {
     this.requestObserver.onStartRequest(null, null);
     this._fileUploadTS[this.file.path] = new Date().getTime();
-    this.log.info("ready to upload file " + wwwFormUrlEncode(this.file.leafName));
-    let url = this.owncloud._serverUrl + kWebDavPath + "/"
+    this.log.info("ready to upload file " + wwwFormUrlEncode(this.file.leafName) + " to folder " + this.owncloud._storageFolder);
+    let url = this.owncloud._serverUrl + kWebDavPath + "/" + this.owncloud._storageFolder + "/"
         + this._fileUploadTS[this.file.path] + "_" + this.file.leafName;
     let fileContents = "";
     let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
@@ -559,7 +566,7 @@ nsOwncloudFileUploader.prototype = {
     //let url = this.owncloud._serverUrl + kWebDavPath;
     this.file = aFile;
 
-    let formData  = "shareType=3&path=" + wwwFormUrlEncode("/"
+    let formData  = "shareType=3&path=" + wwwFormUrlEncode("/" + this.owncloud._storageFolder + "/"
         + this._fileUploadTS[this.file.path] + "_" + this.file.leafName);
     let args = "?format=json";
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
