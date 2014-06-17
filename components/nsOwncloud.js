@@ -4,7 +4,7 @@
 
 /* This file implements the nsIMsgCloudFileProvider interface.
  *
- * This component handles the Owncloud implementation of the
+ * This component handles the ownCloud implementation of the
  * nsIMsgCloudFileProvider interface.
  */
 
@@ -19,7 +19,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/gloda/log4moz.js");
 Cu.import("resource:///modules/cloudFileAccounts.js");
 
-const kAuthPath = "/ocs/v1.php/person/check";
+const kRestBase = "/ocs/v1.php"
+const kAuthPath = kRestBase + "/person/check";
+const kShareApp = kRestBase + "/apps/files_sharing/api/v1/shares";
 // According to Dropbox, the kMaxFileSize is a fixed limit.
 const kMaxFileSize = 157286400;
 const kWebDavPath = "/remote.php/webdav";
@@ -44,7 +46,7 @@ nsOwncloud.prototype = {
   classID: Components.ID("{ad8c3b77-7dc8-41d1-8985-5be88b254ff3}"),
 
   get type() "Owncloud",
-  get displayName() "Owncloud",
+  get displayName() "ownCloud",
   get serviceURL() this._serverUrl,
   get iconClass() "chrome://owncloud/content/owncloud.png",
   get accountKey() this._accountKey,
@@ -54,6 +56,7 @@ nsOwncloud.prototype = {
 
   _accountKey: false,
   _serverUrl: "",
+  _storageFolder: "",
   _userName: "",
   _password: "",
   _prefBranch: null,
@@ -88,6 +91,12 @@ nsOwncloud.prototype = {
     this._serverUrl = this._prefBranch.getCharPref("server");
     this._userName = this._prefBranch.getCharPref("username");
     this._password = this._prefBranch.getCharPref("password");
+
+    if(this._prefBranch.prefHasUserValue("storageFolder")) {
+      this._storageFolder = this._prefBranch.getCharPref("storageFolder");
+    } else {
+      this._storageFolder = "/";
+    }
   },
 
   /**
@@ -331,7 +340,7 @@ nsOwncloud.prototype = {
 
 
   /**
-   * Our Owncloud implementation does not implement the createNewAccount
+   * Our ownCloud implementation does not implement the createNewAccount
    * function defined in nsIMsgCloudFileProvider.idl.
    */
   createNewAccount: function nsOwncloud_createNewAccount(aEmailAddress,
@@ -369,7 +378,7 @@ nsOwncloud.prototype = {
   get createNewAccountUrl() "",
 
   /**
-   * For a particular error, return a URL if Owncloud has a page for handling
+   * For a particular error, return a URL if ownCloud has a page for handling
    * that particular error.
    *
    * @param aError the error to get the URL for
@@ -418,14 +427,16 @@ nsOwncloud.prototype = {
     if (this._password == undefined || !this._password)
       this._password = this.getPassword(this._userName, !aWithUI);
     this.log.info("Sending login information...");
-    
-    let args = "?login=" + this._userName + "&password=" + this._password + "&format=json";
 
+    let loginData = "login=" + wwwFormUrlEncode(this._userName) + "&password=" +
+                                                wwwFormUrlEncode(this._password);
+    let args = "?format=json";
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
-    let curDate = Date.now().toString();
 
     req.open("POST", this._serverUrl + kAuthPath + args, true);
+    req.setRequestHeader('Content-Type', "application/x-www-form-urlencoded");
+    
     req.onerror = function() {
       this.log.info("logon failure");
       failureCallback();
@@ -433,29 +444,34 @@ nsOwncloud.prototype = {
 
     req.onload = function() {
       if (req.status >= 200 && req.status < 400) {
-        this.log.info("auth token response = " + req.responseText);
-        let docResponse = JSON.parse(req.responseText);
-        this.log.info("login response parsed = " + docResponse);
-        let statuscode = docResponse.ocs.meta.statuscode;
-        this.log.info("statuscode = " + statuscode);
-        if (statuscode == 100) {
-          this._loggedIn = true;
-          successCallback();
-        }
-        else {
-          this.clearPassword();
+        try {
+          this.log.info("auth token response = " + req.responseText);
+          let docResponse = JSON.parse(req.responseText);
+          //this.log.info("login response parsed = " + docResponse);
+          let statuscode = docResponse.ocs.meta.statuscode;
+          this.log.info("statuscode = " + statuscode);
+          if (statuscode == 100) {
+            this._loggedIn = true;
+            successCallback();
+          }
+          else {
+            this._loggedIn = false;
+            this._lastErrorText = docResponse.ocs.meta.message;
+            this._lastErrorStatus = docResponse.ocs.meta.statuscode;
+            failureCallback();
+          }
+        } catch(e) {
+          this.log.error(e);
           this._loggedIn = false;
-          this._lastErrorText = docResponse.ocs.meta.message;
-          this._lastErrorStatus = docResponse.ocs.meta.statuscode;
           failureCallback();
         }
       }
       else {
-        this.clearPassword();
         failureCallback();
       }
     }.bind(this);
-    req.send();
+    
+    req.send(loginData);
     this.log.info("Login information sent!");
   },
 };
@@ -474,14 +490,17 @@ nsOwncloudFileUploader.prototype = {
   file : null,
   callback : null,
   request : null,
+  _fileUploadTS: { }, // timestamps to prepend, avoiding filename conflict
 
   /**
    * Kicks off the upload request for the file associated with this Uploader.
    */
   uploadFile: function nsOFU_uploadFile() {
     this.requestObserver.onStartRequest(null, null);
-    this.log.info("ready to upload file " + wwwFormUrlEncode(this.file.leafName));
-    let url = this.owncloud._serverUrl + kWebDavPath + "/" + this.file.leafName;
+    this._fileUploadTS[this.file.path] = new Date().getTime();
+    this.log.info("ready to upload file " + wwwFormUrlEncode(this.file.leafName) + " to folder " + this.owncloud._storageFolder);
+    let url = this.owncloud._serverUrl + kWebDavPath + "/" + this.owncloud._storageFolder + "/"
+        + this._fileUploadTS[this.file.path] + "_" + this.file.leafName;
     let fileContents = "";
     let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                      .createInstance(Ci.nsIFileInputStream);
@@ -544,10 +563,45 @@ nsOwncloudFileUploader.prototype = {
    *                  ending states of the URL retrieval request.
    */
   _getShareUrl: function nsOFU__getShareUrl(aFile, aCallback) {
-    let url = this.owncloud._serverUrl + kWebDavPath;
+    //let url = this.owncloud._serverUrl + kWebDavPath;
     this.file = aFile;
-    this.owncloud._urlsForFiles[this.file.path] = url;
-    aCallback(this.requestObserver, Cr.NS_OK);
+
+    let formData  = "shareType=3&path=" + wwwFormUrlEncode("/" + this.owncloud._storageFolder + "/"
+        + this._fileUploadTS[this.file.path] + "_" + this.file.leafName);
+    let args = "?format=json";
+    let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Ci.nsIXMLHttpRequest);
+    
+    req.open("POST", this.owncloud._serverUrl + kShareApp + args, true,
+        this.owncloud._userName, this.owncloud._password);
+    req.withCredentials = true;
+    req.setRequestHeader('Content-Type', "application/x-www-form-urlencoded");
+    req.setRequestHeader("Content-Length", formData.length);
+    
+    req.onload = function() {
+      this.log.debug("Raw response: " + req.responseText);
+      if (req.status >= 200 && req.status < 400) {
+        try {
+          var response = JSON.parse(req.responseText);
+          this.owncloud._urlsForFiles[this.file.path] = response.ocs.data.url 
+                                                        + '&download';
+          aCallback(this.requestObserver, Cr.NS_OK);
+        } catch(e) {
+            this.log.error(e);
+            aCallback(this.requestObserver, Ci.nsIMsgCloudFileProvider.uploadErr);
+        }
+      } else {
+        this.log.info("Could not retrive share URL");
+        aCallback(this.requestObserver, Cr.NS_ERROR_FAILURE);
+      }
+    }.bind(this);
+
+    req.onerror = function(e) {
+      this.log.debug("Other error: " + e);
+      aCallback(this.requestObserver, Cr.NS_ERROR_FAILURE);
+    }.bind(this);
+    this.log.debug("Raw formData: " + formData);
+    req.send(formData);
   },
 };
 
