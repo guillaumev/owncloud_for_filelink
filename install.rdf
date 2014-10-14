@@ -7,6 +7,7 @@
     <em:id>owncloud@viguierjust.com</em:id>
     <em:name>ownCloud for Filelink</em:name>
     <em:version>1.0</em:version>
+    <em:type>2</em:type>
     <em:creator>guillaumev</em:creator>
 
     <em:description>ownCloud provider for FileLink</em:description>
