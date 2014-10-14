@@ -10,7 +10,7 @@
     <em:type>2</em:type>
     <em:creator>guillaumev</em:creator>
 
-    <em:description>ownCloud provider for FileLink</em:description>
+    <em:description>ownCloud provider for Filelink</em:description>
     <em:homepageURL>https://github.com/guillaumev/owncloud_for_filelink</em:homepageURL>
     <em:iconURL>chrome://owncloud/content/icon.png</em:iconURL>
 
