@@ -59,6 +59,7 @@ nsOwncloud.prototype = {
   _storageFolder: "",
   _userName: "",
   _password: "",
+  _protectUploads: "",
   _prefBranch: null,
   _loggedIn: false,
   _authToken: "",
@@ -96,6 +97,10 @@ nsOwncloud.prototype = {
       this._storageFolder = this._prefBranch.getCharPref("storageFolder");
     } else {
       this._storageFolder = "/";
+    }
+    
+    if(this._prefBranch.prefHasUserValue("protectUploads")) {
+      this._protectUploads = this._prefBranch.getCharPref("protectUploads");
     }
   },
 
@@ -568,6 +573,9 @@ nsOwncloudFileUploader.prototype = {
 
     let formData  = "shareType=3&path=" + wwwFormUrlEncode("/" + this.owncloud._storageFolder + "/"
         + this._fileUploadTS[this.file.path] + "_" + this.file.leafName);
+    if(this.owncloud._protectUploads.length) {
+      formData += "&password=" + wwwFormUrlEncode(this.owncloud._protectUploads);
+    }
     let args = "?format=json";
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
@@ -583,9 +591,15 @@ nsOwncloudFileUploader.prototype = {
       if (req.status >= 200 && req.status < 400) {
         try {
           var response = JSON.parse(req.responseText);
-          this.owncloud._urlsForFiles[this.file.path] = response.ocs.data.url 
-                                                        + '&download';
-          aCallback(this.requestObserver, Cr.NS_OK);
+          if (typeof response.ocs.data.url !== 'undefined') {
+            this.owncloud._urlsForFiles[this.file.path] = response.ocs.data.url;
+            if(!this.owncloud._protectUploads.length) {
+              this.owncloud._urlsForFiles[this.file.path] += '&download';
+            }
+            aCallback(this.requestObserver, Cr.NS_OK);
+          } else {
+            aCallback(this.requestObserver, Ci.nsIMsgCloudFileProvider.uploadErr);
+          }          
         } catch(e) {
             this.log.error(e);
             aCallback(this.requestObserver, Ci.nsIMsgCloudFileProvider.uploadErr);
