@@ -7,3 +7,4 @@
 <!ENTITY owncloudSettings.storageFolder "Folder do którego będą wgrywane załączniki">
 <!ENTITY owncloudSettings.username "Twoja nazwa użytkownika">
 <!ENTITY owncloudSettings.password "Twoje hasło">
+<!ENTITY owncloudSettings.protectUploads "Hasło dostępu do wgranych załączników">

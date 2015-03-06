@@ -7,3 +7,4 @@
 <!ENTITY owncloudSettings.storageFolder "Storage path in ownCloud">
 <!ENTITY owncloudSettings.username "Username">
 <!ENTITY owncloudSettings.password "Password">
+<!ENTITY owncloudSettings.protectUploads "Password for uploaded files">
