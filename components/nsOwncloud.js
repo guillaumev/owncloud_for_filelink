@@ -504,7 +504,7 @@ nsOwncloudFileUploader.prototype = {
     this.requestObserver.onStartRequest(null, null);
     this._fileUploadTS[this.file.path] = new Date().getTime();
     this.log.info("ready to upload file " + wwwFormUrlEncode(this.file.leafName) + " to folder " + this.owncloud._storageFolder);
-    let url = this.owncloud._serverUrl + kWebDavPath + "/" + this.owncloud._storageFolder + "/"
+    let url = this.owncloud._serverUrl + kWebDavPath + ("/" + this.owncloud._storageFolder + "/").replace(/\/+/g,'/')
         + this._fileUploadTS[this.file.path] + "_" + this.file.leafName;
     let fileContents = "";
     let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
@@ -571,7 +571,7 @@ nsOwncloudFileUploader.prototype = {
     //let url = this.owncloud._serverUrl + kWebDavPath;
     this.file = aFile;
 
-    let formData  = "shareType=3&path=" + wwwFormUrlEncode("/" + this.owncloud._storageFolder + "/"
+    let formData  = "shareType=3&path=" + wwwFormUrlEncode( ("/" + this.owncloud._storageFolder + "/").replace(/\/+/g,'/')
         + this._fileUploadTS[this.file.path] + "_" + this.file.leafName);
     if(this.owncloud._protectUploads.length) {
       formData += "&password=" + wwwFormUrlEncode(this.owncloud._protectUploads);
@@ -585,6 +585,7 @@ nsOwncloudFileUploader.prototype = {
     req.withCredentials = true;
     req.setRequestHeader('Content-Type', "application/x-www-form-urlencoded");
     req.setRequestHeader("Content-Length", formData.length);
+    req.setRequestHeader('OCS-APIREQUEST', 'true');
     
     req.onload = function() {
       this.log.debug("Raw response: " + req.responseText);
