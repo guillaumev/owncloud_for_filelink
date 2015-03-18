@@ -91,7 +91,6 @@ nsOwncloud.prototype = {
                                                 aAccountKey + ".");
     this._serverUrl = this._prefBranch.getCharPref("server");
     this._userName = this._prefBranch.getCharPref("username");
-    this._password = this._prefBranch.getCharPref("password");
 
     if(this._prefBranch.prefHasUserValue("storageFolder")) {
       this._storageFolder = this._prefBranch.getCharPref("storageFolder");
@@ -408,6 +407,55 @@ nsOwncloud.prototype = {
    */
   deleteFile: function nsOwncloud_deleteFile(aFile, aCallback) {
     return Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Returns the saved password for this account if one exists, or prompts
+   * the user for a password. Returns the empty string on failure.
+   *
+   * @param aUsername the username associated with the account / password.
+   * @param aNoPrompt a boolean for whether or not we should suppress
+   *                  the password prompt if no password exists.  If so,
+   *                  returns the empty string if no password exists.
+   */
+  getPassword: function(aUsername, aNoPrompt) {
+    this.log.info("Getting password for user: " + aUsername);
+
+    if (aNoPrompt)
+      this.log.info("Suppressing password prompt");
+
+    let passwordURI = this._serverUrl;
+    let logins = Services.logins.findLogins({}, passwordURI, null, passwordURI);
+    for each (let loginInfo in logins) {
+      if (loginInfo.username == aUsername)
+        return loginInfo.password;
+    }
+    if (aNoPrompt)
+      return "";
+
+    // OK, let's prompt for it.
+    let win = Services.wm.getMostRecentWindow(null);
+
+    let authPrompter = Services.ww.getNewAuthPrompter(win);
+    let password = { value: "" };
+    // Use the service name in the prompt text
+    let serverUrl = this._serverUrl;
+    let userPos = this._serverUrl.indexOf("//") + 2;
+    let userNamePart = encodeURIComponent(this._userName) + '@';
+    serverUrl = this._serverUrl.substr(0, userPos) + userNamePart + this._serverUrl.substr(userPos);
+    let messengerBundle = Services.strings.createBundle(
+      "chrome://messenger/locale/messenger.properties");
+    let promptString = messengerBundle.formatStringFromName("passwordPrompt",
+                                                            [this._userName,
+                                                             this.displayName],
+                                                            2);
+
+    if (authPrompter.promptPassword(this.displayName, promptString, serverUrl,
+                                    authPrompter.SAVE_PASSWORD_PERMANENTLY,
+                                    password))
+      return password.value;
+
+    return "";
   },
 
   /**
