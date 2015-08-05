@@ -642,8 +642,9 @@ nsOwncloudFileUploader.prototype = {
           var response = JSON.parse(req.responseText);
           if (typeof response.ocs.data.url !== 'undefined') {
             this.owncloud._urlsForFiles[this.file.path] = response.ocs.data.url;
-            if(!this.owncloud._protectUploads.length) {
-              this.owncloud._urlsForFiles[this.file.path] += '&download';
+            if(!this.owncloud._protectUploads.length) {              
+              var arg_separator = this.owncloud._urlsForFiles[this.file.path].lastIndexOf("?") > 0 ? "&" : "/";
+              this.owncloud._urlsForFiles[this.file.path] += arg_separator +'download';
             }
             aCallback(this.requestObserver, Cr.NS_OK);
           } else {
