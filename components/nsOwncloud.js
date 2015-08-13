@@ -263,16 +263,14 @@ nsOwncloud.prototype = {
 
     req.onload = function() {
       if (req.status >= 200 && req.status < 400) {
-        let availBytes = req.responseXML.documentElement.getElementsByTagNameNS("DAV:", "quota-available-bytes");
-
         let qub = req.responseXML.documentElement.getElementsByTagNameNS("DAV:", "quota-used-bytes");
-        this._fileSpaceUsed = qub && qub.length && qub[0].textContent || -1;
+        this._fileSpaceUsed = qub && qub.length && Number(qub[0].textContent) || -1;
         if (this._fileSpaceUsed < 0) this._fileSpaceUsed = -1;
-
         let qab = req.responseXML.documentElement.getElementsByTagNameNS("DAV:", "quota-available-bytes");
-        let fsa = qab && qab.length && qab[0].textContent;
+        let fsa = qab && qab.length && Number(qab[0].textContent) || -1;
+
         if (fsa && fsa > -1) {
-          this._totalStorage = fsa;
+          this._totalStorage = fsa+this._fileSpaceUsed;
         } else if (!fsa && fsa !== 0) {
           this._totalStorage = -1;
         } else if (!fsa || fsa < 0) {
