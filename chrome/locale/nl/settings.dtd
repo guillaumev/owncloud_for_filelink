@@ -2,9 +2,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  
 -->
-<!ENTITY owncloudSettings.learnMore "Lees meer…">
-<!ENTITY owncloudSettings.server "Server URL">
-<!ENTITY owncloudSettings.storageFolder "Opslag locatie binnen ownCloud">
+<!ENTITY owncloudSettings.learnMore "Meer info…">
+<!ENTITY owncloudSettings.server "Server-URL">
+<!ENTITY owncloudSettings.storageFolder "Opslagpad in ownCloud">
 <!ENTITY owncloudSettings.username "Gebruikersnaam">
 <!ENTITY owncloudSettings.password "Wachtwoord">
-<!ENTITY owncloudSettings.protectUploads "Password for uploaded files">
+<!ENTITY owncloudSettings.protectUploads "Wachtwoord voor geüploade bestanden">
