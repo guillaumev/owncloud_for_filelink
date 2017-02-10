@@ -185,7 +185,7 @@ nsOwncloud.prototype = {
     let exceedsQuota = Ci.nsIMsgCloudFileProvider.uploadWouldExceedQuota;
     if (aFile.fileSize > this._maxFileSize)
       return aCallback.onStopRequest(null, null, exceedsFileLimit);
-    if (aFile.fileSize > this.remainingFileSpace)
+    if ((this._totalStorage > 0) && (aFile.fileSize > this.remainingFileSpace))
       return aCallback.onStopRequest(null, null, exceedsQuota);
 
     delete this._userInfo; // force us to update userInfo on every upload.
@@ -269,11 +269,11 @@ nsOwncloud.prototype = {
         let qab = req.responseXML.documentElement.getElementsByTagNameNS("DAV:", "quota-available-bytes");
         let fsa = qab && qab.length && Number(qab[0].textContent) || -1;
 
-        if (fsa && fsa > -1) {
+        if (fsa && fsa > -1) { // positive numbers
           this._totalStorage = fsa+this._fileSpaceUsed;
-        } else if (!fsa && fsa !== 0) {
+        } else if (!fsa && fsa !== 0) { // 0 and unequal 0
           this._totalStorage = -1;
-        } else if (!fsa || fsa < 0) {
+        } else if (!fsa || fsa < 0) { // 0 or negative
           this._totalStorage = 0;
         }
         successCallback();
