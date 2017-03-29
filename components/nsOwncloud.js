@@ -22,8 +22,6 @@ Cu.import("resource:///modules/cloudFileAccounts.js");
 const kRestBase = "/ocs/v1.php"
 const kAuthPath = kRestBase + "/person/check";
 const kShareApp = kRestBase + "/apps/files_sharing/api/v1/shares";
-// According to Dropbox, the kMaxFileSize is a fixed limit.
-const kMaxFileSize = 157286400;
 const kWebDavPath = "/remote.php/webdav";
 
 function wwwFormUrlEncode(aStr) {
@@ -74,7 +72,7 @@ nsOwncloud.prototype = {
   _uploader : null,
   _lastErrorStatus : 0,
   _lastErrorText : "",
-  _maxFileSize : kMaxFileSize,
+  _maxFileSize : -1,
   _totalStorage: -1,
   _fileSpaceUsed : -1,
   _uploads: [],
@@ -182,10 +180,7 @@ nsOwncloud.prototype = {
    *                  ending states of the upload.
    */
   _finishUpload: function nsOwncloud__finishUpload(aFile, aCallback) {
-    let exceedsFileLimit = Ci.nsIMsgCloudFileProvider.uploadExceedsFileLimit;
     let exceedsQuota = Ci.nsIMsgCloudFileProvider.uploadWouldExceedQuota;
-    if (aFile.fileSize > this._maxFileSize)
-      return aCallback.onStopRequest(null, null, exceedsFileLimit);
     if ((this._totalStorage > 0) && (aFile.fileSize > this.remainingFileSpace))
       return aCallback.onStopRequest(null, null, exceedsQuota);
 
