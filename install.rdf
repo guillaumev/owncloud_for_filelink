@@ -21,6 +21,14 @@
         <em:maxVersion>17.*</em:maxVersion>
       </Description>
     </em:targetApplication>
+
+    <em:localized>
+      <Description>
+        <em:locale>es</em:locale>
+        <em:name>Soporte de ownCloud para Filelink</em:name>
+        <em:description>Añade soporte de ownCloud para la característica Filelink en Thunderbird.</em:description>
+      </Description>
+    </em:localized>
    
   </Description>      
 </RDF>

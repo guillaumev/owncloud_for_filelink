@@ -4,6 +4,7 @@ locale owncloud fr chrome/locale/fr/
 locale owncloud pl chrome/locale/pl/
 locale owncloud de chrome/locale/de/
 locale owncloud nl chrome/locale/nl/
+locale owncloud es chrome/locale/es/
 component {ad8c3b77-7dc8-41d1-8985-5be88b254ff3} components/nsOwncloud.js
 contract @mozilla.org/mail/owncloud;1 {ad8c3b77-7dc8-41d1-8985-5be88b254ff3}
 category cloud-files Owncloud @mozilla.org/mail/owncloud;1
