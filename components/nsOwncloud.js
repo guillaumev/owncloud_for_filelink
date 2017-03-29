@@ -46,7 +46,7 @@ nsOwncloud.prototype = {
   classID: Components.ID("{ad8c3b77-7dc8-41d1-8985-5be88b254ff3}"),
 
   get type() "Owncloud",
-  get displayName() "ownCloud",
+  get displayName() "ownCloud/nextCloud",
   get serviceURL() this._serverUrl,
   get iconClass() "chrome://owncloud/content/owncloud.png",
   get accountKey() this._accountKey,
@@ -87,7 +87,7 @@ nsOwncloud.prototype = {
    */
   init: function nsOwncloud_init(aAccountKey) {
     this._accountKey = aAccountKey;
-    this._prefBranch = Services.prefs.getBranch("mail.cloud_files.accounts." + 
+    this._prefBranch = Services.prefs.getBranch("mail.cloud_files.accounts." +
                                                 aAccountKey + ".");
     this._serverUrl = this._prefBranch.getCharPref("server");
     this._userName = this._prefBranch.getCharPref("username");
@@ -97,7 +97,7 @@ nsOwncloud.prototype = {
     } else {
       this._storageFolder = "/";
     }
-    
+
     if(this._prefBranch.prefHasUserValue("protectUploads")) {
       this._protectUploads = this._prefBranch.getCharPref("protectUploads");
     }
@@ -133,7 +133,7 @@ nsOwncloud.prototype = {
       this._uploader = null;
   },
 
-  /** 
+  /**
    * Attempts to upload a file to Owncloud.
    *
    * @param aFile the nsILocalFile to be uploaded
@@ -244,14 +244,14 @@ nsOwncloud.prototype = {
         this.requestObserver
             .onStopRequest(null, null, Ci.nsIMsgCloudFileProvider.authErr);
       }.bind(this);
-      
+
     let body = '<propfind xmlns="DAV:">' +
                  '<prop>' +
                    '<quota-available-bytes/>' +
                    '<quota-used-bytes/>' +
                  '</prop>' +
                '</propfind>';
-      
+
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
 
@@ -282,7 +282,7 @@ nsOwncloud.prototype = {
         failureCallback();
       }
     }.bind(this);
-    
+
     req.send(body);
   },
 
@@ -487,7 +487,8 @@ nsOwncloud.prototype = {
 
     req.open("POST", this._serverUrl + kAuthPath + args, true);
     req.setRequestHeader('Content-Type', "application/x-www-form-urlencoded");
-    
+    req.setRequestHeader('OCS-APIRequest', 'true');
+
     req.onerror = function() {
       this.log.info("logon failure");
       failureCallback();
@@ -521,7 +522,7 @@ nsOwncloud.prototype = {
         failureCallback();
       }
     }.bind(this);
-    
+
     req.send(loginData);
     this.log.info("Login information sent!");
   },
@@ -562,7 +563,7 @@ nsOwncloudFileUploader.prototype = {
     bufStream.init(fstream, this.file.fileSize);
     bufStream = bufStream.QueryInterface(Ci.nsIInputStream);
     let contentLength = fstream.available();
-    
+
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
 
@@ -586,6 +587,7 @@ nsOwncloudFileUploader.prototype = {
       }
     }.bind(this);
     req.setRequestHeader("Content-Length", contentLength);
+    req.setRequestHeader('OCS-APIREQUEST', 'true');
     req.send(bufStream);
   },
 
@@ -625,14 +627,14 @@ nsOwncloudFileUploader.prototype = {
     let args = "?format=json";
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
-    
+
     req.open("POST", this.owncloud._serverUrl + kShareApp + args, true,
         this.owncloud._userName, this.owncloud._password);
     req.withCredentials = true;
     req.setRequestHeader('Content-Type', "application/x-www-form-urlencoded");
     req.setRequestHeader("Content-Length", formData.length);
     req.setRequestHeader('OCS-APIREQUEST', 'true');
-    
+
     req.onload = function() {
       this.log.debug("Raw response: " + req.responseText);
       if (req.status >= 200 && req.status < 400) {
@@ -640,14 +642,14 @@ nsOwncloudFileUploader.prototype = {
           var response = JSON.parse(req.responseText);
           if (typeof response.ocs.data.url !== 'undefined') {
             this.owncloud._urlsForFiles[this.file.path] = response.ocs.data.url;
-            if(!this.owncloud._protectUploads.length) {              
+            if(!this.owncloud._protectUploads.length) {
               var arg_separator = this.owncloud._urlsForFiles[this.file.path].lastIndexOf("?") > 0 ? "&" : "/";
               this.owncloud._urlsForFiles[this.file.path] += arg_separator +'download';
             }
             aCallback(this.requestObserver, Cr.NS_OK);
           } else {
             aCallback(this.requestObserver, Ci.nsIMsgCloudFileProvider.uploadErr);
-          }          
+          }
         } catch(e) {
             this.log.error(e);
             aCallback(this.requestObserver, Ci.nsIMsgCloudFileProvider.uploadErr);
