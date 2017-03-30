@@ -439,7 +439,7 @@ nsOwncloud.prototype = {
    * If we don't know the limit, this will return -1.
    */
   get fileUploadSizeLimit() this._maxFileSize,
-  get remainingFileSpace() this._totalStorage - this._fileSpaceUsed,
+  get remainingFileSpace() this._totalStorage > 0 ? this._totalStorage - this._fileSpaceUsed : -1,
   get fileSpaceUsed() this._fileSpaceUsed,
 
   /**
