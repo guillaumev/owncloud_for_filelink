@@ -44,7 +44,7 @@ nsOwncloud.prototype = {
 
   classID: Components.ID("{ad8c3b77-7dc8-41d1-8985-5be88b254ff3}"),
 
-  get type() "Owncloud",
+  get type() "Owncloud/NextCloud",
   get displayName() "ownCloud/nextCloud",
   get serviceURL() this._serverUrl,
   get iconClass() "chrome://owncloud/content/owncloud.png",
