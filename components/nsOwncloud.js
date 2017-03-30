@@ -283,6 +283,48 @@ nsOwncloud.prototype = {
   },
 
   /**
+   * A private function that checks that the folder entered in the
+   * settings screen exists on the server.
+   *
+   * @param callback callback function called with true or false as an argument
+   */
+  _checkFolderExists: function nsOwncloud_checkFolderExists(callback) {
+    dump('Checking folder exists');
+    if (this._storageFolder !== '/') {
+      let body = '<propfind xmlns="DAV:">' +
+        '<prop>' +
+          '<resourcetype />' +
+        '</prop>' +
+      '</propfind>';
+
+      let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                  .createInstance(Ci.nsIXMLHttpRequest);
+
+      req.open("PROPFIND", this._serverUrl + kWebDavPath + ("/" + this._storageFolder + "/").replace(/\/+/g,'/'), true, this._userName, this._password);
+      req.onerror = function() {
+        this.log.info("failure checking folder");
+        callback(false);
+      }.bind(this);
+
+      req.onload = function() {
+        if (req.status === 207) {
+          dump('Folder does exist');
+          return callback(true);
+        }
+        else {
+          dump('Folder does not exist');
+          return callback(false);
+        }
+      }.bind(this);
+
+      req.send(body);
+    }
+    else {
+      return callback(true);
+    }
+  },
+
+  /**
    * A private function that first ensures that the user is logged in, and then
    * retrieves the user's profile information.
    *
@@ -357,7 +399,15 @@ nsOwncloud.prototype = {
   createExistingAccount: function nsOwncloud_createExistingAccount(aRequestObserver) {
      // XXX: replace this with a better function
     let successCb = function(aResponseText, aRequest) {
-      aRequestObserver.onStopRequest(null, this, Cr.NS_OK);
+      let folderExists = function (exists) {
+        if (exists) {
+          aRequestObserver.onStopRequest(null, this, Cr.NS_OK);
+        }
+        else {
+          aRequestObserver.onStopRequest(null, this, Ci.nsIMsgCloudFileProvider.authErr);
+        }
+      }.bind(this);
+      this._checkFolderExists(folderExists);
     }.bind(this);
 
     let failureCb = function(aResponseText, aRequest) {
