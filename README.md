@@ -1,3 +1,6 @@
+## Deprecated
+This plugin is now deprecated in favor of https://github.com/nextcloud/nextcloud-filelink
+
 # ownCloud/nextCloud for Filelink
 Development: GVJ Web Sites & Consulting - http://www.viguierjust.com
 
