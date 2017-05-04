@@ -680,6 +680,7 @@ nsOwncloudFileUploader.prototype = {
     req.setRequestHeader('Content-Type', "application/x-www-form-urlencoded");
     req.setRequestHeader("Content-Length", formData.length);
     req.setRequestHeader('OCS-APIREQUEST', 'true');
+    req.setRequestHeader('Authorization', "Basic " + btoa(this.owncloud._userName + ":" + this.owncloud._password));
 
     req.onload = function() {
       this.log.debug("Raw response: " + req.responseText);
